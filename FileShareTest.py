@@ -144,10 +144,11 @@ class FileSharing:
         
     
     def get_neighbor_list(self):
-        return self.neighbor_list       #返HTTPServer()回局域网列表
+        self.boardcast()
     
 if __name__ == '__main__':
     t = FileSharing()
     t.boot()
+    t.get_neighbor_list()
     
     
