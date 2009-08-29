@@ -34,19 +34,18 @@ class FileSharing:
         if not os.path.exists('FileShare.cfg'):
             print 'config file does not exist...fail to share...'
         else:
-            localName = socket.gethostname()    #获取主机名
+            localName = socket.gethostname()    #obtain the localhost name
 
             print 'localName is :', localName
             print 'local IP is :', self.local_IP
             
             file = open('FileShare.cfg', 'r')
             directory = file.read()
-            #print 'current directory is :', os.getcwd()
             file.close()
-            os.chdir(directory)     #切换工作目录到共享目录
+            os.chdir(directory)     #switch to the share directory
             print 'directory after changed :', os.getcwd()
             
-            '''将本机目录共享出去，启动HTTP服务器'''
+            '''stratup the HTTP Server'''
             handler = SimpleHTTPServer.SimpleHTTPRequestHandler
             httpd = SocketServer.TCPServer((self.local_IP, 8800), handler)
             print "HTTP server is at: ", self.local_IP, ': 8800'
@@ -72,26 +71,23 @@ class FileSharing:
         
         while 1:
             message,address = s.recvfrom(8192)
-            #如果是本机IP，不添加进字典。也不发送应答！
+            #if receive a localhost IP, it will not add to dict or send a reply.
             if not address[0] == self.local_IP:
                 dict = {}
                 dict['IP'] = address
                 dict['share_dir_list'] =  message
                 print "Got data from", address
                 
-                #如果目录已在字典中则忽略。否则将IP地址和共享目录添加到字典。
                 try:
                     if self.neighbor_list.index(dict) + 1:
                         pass
                 except:
                     self.neighbor_list.append(dict)
-                    print '当前在线用户列表：', self.neighbor_list
-                
-                os.chdir(self.currentDir)
-                file = open('FileShare.cfg', 'r')
-                directory = file.read()
-                file.close()
-                s.sendto(directory, address)    #对广播的应答
+                    len = self.neighbor_list.__len__() - 1
+                    print (self.neighbor_list[len])['IP'] + ':8800' + '\t\t' + \
+                          (self.neighbor_list[len])['share_dir_list'] + '\n'
+
+                s.sendto(self.directory, address)    #send a reply.
 
         
     def svr_thread(self):
@@ -99,56 +95,62 @@ class FileSharing:
         svr.setDaemon(True)
         svr.start()
         
-    def boardcast(self):
-        dest = ("<broadcast>",50000)
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         
-        os.chdir(self.currentDir)
-        file = open('FileShare.cfg', 'r')
-        directory = file.read()
-        file.close()
-        s.sendto(directory, dest)
+    def boardcast(self):
+        #send a boardcast message for renewing the list
+        self.neighbor_list = []     #initialize the list
+        dest = ("<broadcast>",50000)    #boardcast address
+        self.reply_socket.sendto(self.directory, dest)
+        print 'online users:\n'
+        
+        
+    def replyReceive(self):
+        self.reply_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.reply_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        self.boardcast()
         
         while 1:
-            message, address = s.recvfrom(2048)
-            #如果是本机IP可以考虑不添加进字典
+            message, address = self.reply_socket.recvfrom(2048)
             dict = {}
             dict['IP'] = address
             dict['share_dir_list'] =  message
-            #print "Got data from",address
+            print "Got data from",address
+            print 'online users:\n'
             
-            #如果目录已在字典中则忽略。否则将IP地址和共享目录添加到字典。
+            #if the host has already in the dict, then pass.
             try:
                 if self.neighbor_list.index(dict) + 1:
                     pass
             except:
                 self.neighbor_list.append(dict)
-                print '当前在线用户列表：', self.neighbor_list
+                len = self.neighbor_list.__len__() - 1
+                print (self.neighbor_list[len])['IP'] + ':8800' + '\t\t' + \
+                      (self.neighbor_list[len])['share_dir_list'] + '\n'
     
     
     def boot(self):
                     
+        #get the localhost IP address throught connecting Google Server
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.connect(('google.com', 0))
-        self.local_IP = s.getsockname()[0]   #linux下获取本地ip
+        self.local_IP = s.getsockname()[0]
         
-        #self.localIP = socket.gethostbyname(socket.gethostname())   #win下获取本地ip
+        #backup the share directory through a global variable
+        file = open('FileShare.cfg', 'r')
+        self.directory = file.read()
+        file.close()
         
-        #启动HTTP线程会改变当前路径。这句代码先保存该路径以做之后读取配置文件用。
-        self.currentDir = os.getcwd()
-        #另起线程接收和发送
-        self.HTTP_svr_Thread()      #启动HTTP简单服务器做共享
-        self.svr_thread()           #接受广播，随时更新局域网内共享目录（工作线程）
-        self.boardcast()            #用户登录的时候发送广播
+        self.HTTP_svr_Thread()      #http server work thread
+        self.svr_thread()           #boardcast work thread
+        self.replyReceive()
         
     
     def get_neighbor_list(self):
-        self.boardcast()
+        return self.neighbor_list
     
 if __name__ == '__main__':
     t = FileSharing()
     t.boot()
-    t.get_neighbor_list()
+    print t.get_neighbor_list()
     
     
