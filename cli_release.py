@@ -37,8 +37,8 @@ class fileShare:
             os.chdir(self.directory)     #switch to the share directory
             handler = SimpleHTTPServer.SimpleHTTPRequestHandler
             httpd = SocketServer.TCPServer((self.local_IP, 8800), handler)
-            print '\n\tService start successful...'
-            print "\thttp Server URL: http://" + self.local_IP + ':8800\n'
+            print '\tService start successful...'
+            print "\thttp Server URL: http://" + self.local_IP + ':8800'
             httpd.serve_forever()
         except:
             print '\tService has been started'
@@ -89,7 +89,8 @@ class fileShare:
         
     def boardcast(self, widget=None):
         #send a boardcast message for renewing the list
-        self.neighbor_list = []     #initialize the list
+        #self.neighbor_list = []     #initialize the list
+        self.neighbor_list = [{'192.168.1.102':'/windows/sda5'}, {'192.168.1.103':'F:/'}]
         dest = ("<broadcast>",50000)    #boardcast address
         self.reply_socket.sendto(self.directory, dest)
         
@@ -139,7 +140,7 @@ class fileShare:
             while 1:
                 str = raw_input('Yuki-Share>')
                 if str == 'help':
-                    print '\nyuki-share.py : the command_line release of the yuki-share system'
+                    print 'yuki-share.py : the command_line release of the yuki-share system\n'
                     print 'Usage:\n\tyuki-share> [options]'
                     print 'Options: '
                     print '\t[help]     --get more help about yuki-share'
@@ -150,22 +151,21 @@ class fileShare:
                     print '\t[exit]     --exit'
                     print ''
                 elif str == 'info':
-                    print '\n\thost Name:', self.localName
+                    print '\thost Name:', self.localName
                     print '\toperate system:', os.sys.platform
                     print '\tlocalhost IP:', self.local_IP
                     print '\tlocalhost Share Directory:', self.directory
-                    print ''
                 elif str == 'start':
                     self.HTTP_svr_Thread()
                     self.svr_thread()
                     self.reply_thread()
-                    time.sleep(0.05)
+                    time.sleep(0.1)
                 elif str == 'isstart':
-                    #the config file doesn't exist since the current dir has changed
+                    #the config file shouldn't exist since the current dir has changed
                     if not os.path.exists('FileShare.cfg'):
-                        print '\n\tService has been started'
+                        print '\tService has been started'
                     else:
-                        print '\n\tService has not been started'
+                        print '\tService has not been started'
                 elif str == 'list':
                     self.boardcast()
                     time.sleep(1)
@@ -174,10 +174,10 @@ class fileShare:
                 elif str == 'open 192.168.1.102':
                     webbrowser.open_new_tab('http://192.168.1.102:8800')
                 elif str == 'exit':
-                    print '\n\tThank you for using yuki-share.\n'
+                    print '\tThank you for using yuki-share.'
                     sys.exit()
                 else:
-                    print '\n\tFor more help or getting more Usages, Try input \'help\' '
+                    print '\tFor more help or getting more Usages, Try input \'help\' '
                     
     
 if __name__ == '__main__':
