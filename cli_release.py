@@ -2,12 +2,12 @@
 # -*- coding:utf-8 -*-
 #Filename: test_thread.py
 
-import os
-import sys
+import os, sys
 import time
+import socket
 import thread
 import threading
-import socket
+import webbrowser
 import SocketServer
 import SimpleHTTPServer
 
@@ -37,11 +37,11 @@ class fileShare:
             os.chdir(self.directory)     #switch to the share directory
             handler = SimpleHTTPServer.SimpleHTTPRequestHandler
             httpd = SocketServer.TCPServer((self.local_IP, 8800), handler)
-            print '\nService start successful...'
-            print "http Server URL: http://" + self.local_IP + ':8800\n'
+            print '\n\tService start successful...'
+            print "\thttp Server URL: http://" + self.local_IP + ':8800\n'
             httpd.serve_forever()
         except:
-            print 'Service has been started'
+            print '\tService has been started'
     
     
     def HTTP_svr_Thread(self):
@@ -139,21 +139,21 @@ class fileShare:
             while 1:
                 str = raw_input('Yuki-Share>')
                 if str == 'help':
-                    print 'yuki-share.py : the command_line release of the yuki-share system\n'
+                    print '\nyuki-share.py : the command_line release of the yuki-share system'
                     print 'Usage:\n\tyuki-share> [options]'
-                    print 'options: '
-                    print '[help]     --get more help about yuki-share'
-                    print '[info]     --show the host information'
-                    print '[start]    --start the share service'
-                    print '[isstart]  --check out whether the sevice was start or not'
-                    print '[list]     --print the online users and their sharing'
-                    print '[exit]     --exit'
+                    print 'Options: '
+                    print '\t[help]     --get more help about yuki-share'
+                    print '\t[info]     --show the host information'
+                    print '\t[start]    --start the share service'
+                    print '\t[isstart]  --check out whether the sevice was start or not'
+                    print '\t[list]     --print the online users and their sharing'
+                    print '\t[exit]     --exit'
                     print ''
                 elif str == 'info':
-                    print '\nhost Name:', self.localName
-                    print 'operate system:', os.sys.platform
-                    print 'localhost IP:', self.local_IP
-                    print 'localhost Share Directory:', self.directory
+                    print '\n\thost Name:', self.localName
+                    print '\toperate system:', os.sys.platform
+                    print '\tlocalhost IP:', self.local_IP
+                    print '\tlocalhost Share Directory:', self.directory
                     print ''
                 elif str == 'start':
                     self.HTTP_svr_Thread()
@@ -163,19 +163,21 @@ class fileShare:
                 elif str == 'isstart':
                     #the config file doesn't exist since the current dir has changed
                     if not os.path.exists('FileShare.cfg'):
-                        print 'Service has been started'
+                        print '\n\tService has been started'
                     else:
-                        print 'Service has not been started'
+                        print '\n\tService has not been started'
                 elif str == 'list':
                     self.boardcast()
                     time.sleep(1)
                     for user in self.neighbor_list:
                         print user + '\n'
+                elif str == 'open 192.168.1.102':
+                    webbrowser.open_new_tab('http://192.168.1.102:8800')
                 elif str == 'exit':
-                    print '\nThank you for using yuki-share\n.'
+                    print '\n\tThank you for using yuki-share.\n'
                     sys.exit()
                 else:
-                    print 'For more help or getting more Usages, Try input \'help\' '
+                    print '\n\tFor more help or getting more Usages, Try input \'help\' '
                     
     
 if __name__ == '__main__':
