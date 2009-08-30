@@ -38,7 +38,7 @@ class fileShare:
             handler = SimpleHTTPServer.SimpleHTTPRequestHandler
             httpd = SocketServer.TCPServer((self.local_IP, 8800), handler)
             print '\nService start successful...'
-            print "http Server URL: http://" + self.local_IP + ':8800'
+            print "http Server URL: http://" + self.local_IP + ':8800\n'
             httpd.serve_forever()
         except:
             print 'Service has been started'
@@ -150,7 +150,7 @@ class fileShare:
                     print '[exit]     --exit'
                     print ''
                 elif str == 'info':
-                    print 'host Name:', self.localName
+                    print '\nhost Name:', self.localName
                     print 'operate system:', os.sys.platform
                     print 'localhost IP:', self.local_IP
                     print 'localhost Share Directory:', self.directory
@@ -172,7 +172,7 @@ class fileShare:
                     for user in self.neighbor_list:
                         print user + '\n'
                 elif str == 'exit':
-                    print 'Thank you for using yuki-share.'
+                    print '\nThank you for using yuki-share\n.'
                     sys.exit()
                 else:
                     print 'For more help or getting more Usages, Try input \'help\' '
