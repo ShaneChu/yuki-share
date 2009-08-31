@@ -90,7 +90,7 @@ class fileShare:
     def boardcast(self, widget=None):
         #send a boardcast message for renewing the list
         #self.neighbor_list = []     #initialize the list
-        self.neighbor_list = [{'192.168.1.102':'/windows/sda5'}, {'192.168.1.103':'F:/'}]
+        self.neighbor_list = [{'192.168.1.102':'/windows/sda5'}, {'192.168.1.103':'/windows/sda7'}]
         dest = ("<broadcast>",50000)    #boardcast address
         self.reply_socket.sendto(self.directory, dest)
         
@@ -143,12 +143,12 @@ class fileShare:
                     print 'yuki-share.py : the command_line release of the yuki-share system\n'
                     print 'Usage:\n\tyuki-share> [options]'
                     print 'Options: '
-                    print '\t[help]     --get more help about yuki-share'
-                    print '\t[info]     --show the host information'
-                    print '\t[start]    --start the share service'
-                    print '\t[isstart]  --check out whether the sevice was start or not'
-                    print '\t[list]     --print the online users and their sharing'
-                    print '\t[exit]     --exit'
+                    print '\thelp     --get more help about yuki-share'
+                    print '\tinfo     --show the host information'
+                    print '\tstart    --start the share service'
+                    print '\tisstart  --check out whether the sevice was start or not'
+                    print '\tlist     --print the online users and their sharing'
+                    print '\texit     --exit'
                     print ''
                 elif str == 'info':
                     print '\thost Name:', self.localName
@@ -169,8 +169,9 @@ class fileShare:
                 elif str == 'list':
                     self.boardcast()
                     time.sleep(1)
+                    print '\t  LAN Host' + '\t\t' + '  Share Dir'
                     for user in self.neighbor_list:
-                        print user + '\n'
+                        print '\t' + user.keys()[0] + '\t\t' + user.values()[0]
                 elif str == 'open 192.168.1.102':
                     webbrowser.open_new_tab('http://192.168.1.102:8800')
                 elif str == 'exit':
