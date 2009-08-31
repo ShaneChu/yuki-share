@@ -43,7 +43,8 @@ class fileShare:
             print "\thttp Server URL: http://" + self.local_IP + ':8800'
             httpd.serve_forever()
         except:
-            print '\tService has been started'
+            print '\tError:cannot startup.please make sure that the dir is right.\
+                   \t      Others, the service couldnot startup twice.'
     
     
     def HTTP_svr_Thread(self):
@@ -178,7 +179,7 @@ class fileShare:
                         continue
                     time.sleep(1)
                     if self.neighbor_list == []:
-                        print 'Result: There is no other user online now.'
+                        print '\tResult: There is no any other users online now.'
                     else:
                         print '\t  LAN Host' + '\t\t' + '  Share Dir'
                         for user in self.neighbor_list:
@@ -191,11 +192,11 @@ class fileShare:
                             if check != None:
                                 webbrowser.open_new_tab('http://' + array[1] + ':8800')
                             else:
-                                print 'Invalid Usage.\n\tTry: open [IP Address]'
+                                print '\tInvalid Usage.\tTry: open [IP Address]'
                         else:
-                            print 'Invalid Usage.\n\tTry: open [IP Address]'
+                            print '\tInvalid Usage.\tTry: open [IP Address]'
                 elif str == 'exit':
-                    print '\tThank you for using yuki-share.'
+                    print '\tThank you for using Yuki-Share.'
                     sys.exit()
                 else:
                     print '\tFor more help or getting more Usages, Try input \'help\' '
