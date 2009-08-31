@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding:utf-8 -*-
-#Filename: test_thread.py
+#Filename: cli_release.py
 
 
 import re
