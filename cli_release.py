@@ -104,8 +104,8 @@ class fileShare:
         
     def boardcast(self, widget=None):
         #send a boardcast message for renewing the list
-        #self.neighbor_list = []     #initialize the list
-        self.neighbor_list = [{'192.168.1.102':'/windows/sda5'}, {'192.168.1.103':'/windows/sda7'}]
+        self.neighbor_list = []     #initialize the list
+        #self.neighbor_list = [{'192.168.1.102':'/windows/sda5'}, {'192.168.1.103':'/windows/sda7'}]
         dest = ("<broadcast>",50000)    #boardcast address
         self.reply_socket.sendto(self.directory, dest)
         
