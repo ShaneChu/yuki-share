@@ -197,7 +197,7 @@ if __name__ == '__main__':
     while True:
         t = raw_input('>')
         if t == '1':
-            fg.fileSend(fg.local_IP, '/windows/sda7/picture/潮师魂/小兰3.jpg')
+            fg.fileSend(fg.local_IP, '/windows/sda7/picture/computer/4.jpg')
 
 
 
