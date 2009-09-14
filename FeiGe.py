@@ -46,8 +46,8 @@ class FeiGe():
         self.local_IP = s.getsockname()[0]
         self.tPort = 7777
         self.uPort = 50000
-        self.tcpPort = (self.local_IP, self.tPort)
-        self.udpPort = (self.local_IP, self.uPort)
+        self.tcpPort = ('', self.tPort)
+        self.udpPort = ('', self.uPort)
         self.bufferSize = 1024
         self.onlineUser = []
 
@@ -55,17 +55,30 @@ class FeiGe():
     def fileSend(self, dest, fileName):
         svrSock = socket(AF_INET, SOCK_STREAM)
         svrSock.connect((dest, self.tPort))
-        f = open(fileName, 'rb')
-        while True:
-            data = f.read(self.bufferSize)
-            if not data:
-                break
-            while len(data) > 0:
-                sent = svrSock.send(data)
-                data = data[sent:]
+        svrSock.send(fileName)
+        reply = svrSock.recv(self.bufferSize)
+        if reply == 'True':
+            print 'Preparing to send..'
 
-        svrSock.close()
-        print 'file has sended...'
+            if os.name == 'nt':
+                fileName = fileName.decode('utf-8').encode('936')
+            f = open(fileName, 'rb')
+        
+            while True:
+                data = f.read(self.bufferSize)
+                if not data:
+                    break
+                while len(data) > 0:
+                    sent = svrSock.send(data)
+                    data = data[sent:]
+
+            svrSock.close()
+            print 'file has sended...'
+
+    def send_thr(self, dest, filename):
+        send_thr = mythread(self.fileSend, dest, filename)
+        send_thr.setDaemon(True)
+        send_thr.start()
 
 
     def fileRec(self):
@@ -77,10 +90,14 @@ class FeiGe():
         while True:
             cliSock, addr = serSock.accept()
             print '...connected from:', addr
-            #judge = raw_input("Do you want get the file?(y/n):")
-            #if judge == 'y':
+
+            name = cliSock.recv(self.bufferSize)
+            name = name.split(os.path.sep)[-1]
+            #ron = func("get a file \'%s\', receive or not?"%(name))
+            #if ron:
+            cliSock.send('True')
             time.sleep(0.5)
-            self.rece_thr(cliSock)
+            self.rece_thr(cliSock, name)
 
 
     def frece_thread(self):
@@ -89,9 +106,10 @@ class FeiGe():
         frece_thr.start()
 
 
-    def rece(self, cliSock):
+    def rece(self, cliSock, name):
 
-        f = open('ahane.jpg', 'wb')
+        os.chdir('/home/administrator/桌面')
+        f = open(name, 'wb')
         while True:
             data = cliSock.recv(self.bufferSize)
             if not data:
@@ -105,11 +123,10 @@ class FeiGe():
         print 'file has downloaded...'
 
 
-    def rece_thr(self, cliSock):
-        rece_thr = mythread(self.rece, cliSock)
+    def rece_thr(self, cliSock, name):
+        rece_thr = mythread(self.rece, cliSock, name)
         rece_thr.setDaemon(True)
         rece_thr.start()
-        rece_thr.join()
 
 
     def BrcaListen(self):
@@ -119,18 +136,16 @@ class FeiGe():
         uSock.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)
         uSock.bind(self.udpPort)
         
-        while 1:
+        while True:
             message, address = uSock.recvfrom(8192)
             #if receive a localhost IP, it will not send a reply.
-            if not address[0] == self.local_IP:
-                print "Got data from", address
-
-                try:
-                    if self.onlineUser.index(address) + 1:
-                        pass
-                except:
-                    self.onlineUser.append(address)
-                    s.sendto('Hi', address)
+            #if address[0] <> self.local_IP:
+            try:
+                if self.onlineUser.index(address[0]) + 1:
+                    pass
+            except:
+                self.onlineUser.append(address[0])
+                uSock.sendto('Hi', address)
 
         
     def brc_thread(self):
@@ -142,32 +157,27 @@ class FeiGe():
     def broadcast(self, widget=None):
 
         ''' send a broadcast message for renewing the list '''
-
         #initialize the list
-        #self.onlineUser = []
-        self.neighbor_list = ['192.168.1.101', '172.16.1.10', '10.1.1.1']
-
+        self.onlineUser = []
         dest = ("<broadcast>", self.uPort)
+        time.sleep(0.5)
         self.reply_socket.sendto('Hi', dest)
-        
+
         
     def replyReceive(self):
-        
+
         self.reply_socket = socket(AF_INET, SOCK_DGRAM)
         self.reply_socket.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)
         self.broadcast()
-        
-        while 1:
+
+        while True:
             message, address = self.reply_socket.recvfrom(2048)
-
-            if not address[0] == self.local_IP:
-                print "Got data from", address
-
-                try:
-                    if self.onlineUser.index(address) + 1:
-                        pass
-                except:
-                    self.onlineUser.append(address)
+            #if address[0] <> self.local_IP:
+            try:
+                if self.onlineUser.index(address[0]) + 1:
+                    pass
+            except:
+                self.onlineUser.append(address[0])
 
     
     def reply_thread(self):
@@ -182,13 +192,12 @@ if __name__ == '__main__':
     fg.frece_thread()
     fg.brc_thread()
     fg.reply_thread()
-
     print fg.onlineUser
 
     while True:
         t = raw_input('>')
         if t == '1':
-            fg.fileSend(fg.local_IP, '/windows/sda7/picture/computer/4.jpg')
+            fg.fileSend(fg.local_IP, '/windows/sda7/picture/潮师魂/小兰3.jpg')
 
 
 
