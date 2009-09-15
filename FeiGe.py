@@ -94,14 +94,14 @@ class FeiGe():
 
         while True:
             cliSock, addr = serSock.accept()
-            print '...connected from:', addr
+            print 'connected from:', addr
 
             name = cliSock.recv(self.bufferSize)
             name = name.split(os.path.sep)[-1]
             #ron = func("get a file \'%s\', receive or not?"%(name))
             #if ron:
             cliSock.send('True')
-            time.sleep(0.5)
+            #time.sleep(0.5)
             self.rece_thr(cliSock, name)
 
 
@@ -114,6 +114,7 @@ class FeiGe():
     def rece(self, cliSock, name):
 
         #os.chdir('/home/administrator/桌面')
+        print 'receiving file "%s"' % (name)
         if os.name == 'nt':
             name = name.decode('utf-8'.encode('936'))
         f = open(name, 'wb')
@@ -130,7 +131,8 @@ class FeiGe():
         cliSock.close()
         tend = time.time()
         print 'file has downloaded..'
-        print 'Total time used: %*.*f s..' % (9, 5, tend - tstart)
+        #print 'Total time used: %*.*f s..' % (9, 5, tend - tstart)
+        print 'receive time ' + str(tend - tstart)
 
 
     def rece_thr(self, cliSock, name):
@@ -148,6 +150,7 @@ class FeiGe():
         
         while True:
             message, address = uSock.recvfrom(8192)
+            uSock.sendto('Hi', address)
             #if receive a localhost IP, it will not send a reply.
             #if address[0] <> self.local_IP:
             try:
@@ -155,7 +158,6 @@ class FeiGe():
                     pass
             except:
                 self.onlineUser.append(address[0])
-                uSock.sendto('Hi', address)
 
         
     def brc_thread(self):
@@ -182,6 +184,7 @@ class FeiGe():
 
         while True:
             message, address = self.reply_socket.recvfrom(2048)
+            print 'receive a reply'
             #if address[0] <> self.local_IP:
             try:
                 if self.onlineUser.index(address[0]) + 1:
