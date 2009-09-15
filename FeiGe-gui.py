@@ -62,15 +62,17 @@ class GFeige(gtk.Window):
         self.treeview.insert_column_with_attributes(-1, "onlineUser", r, text=1)
         #self.treeview.insert_column_with_attributes(-1, "hostname", r, text=1)
 
+        '''the fifth line below is to use auto scrollbar policy for ScrolledWindow'''
         self.treeview.set_model(self.list)
         self.treeview.connect("cursor-changed", self.listSelected)
         self.swindow = gtk.ScrolledWindow()
         self.swindow.add(self.treeview)
+        self.swindow.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
 
         self.count = gtk.Label('User num ' + str(len(self.fg.onlineUser)))
         self.renew = gtk.Button('Renew')
         self.send = gtk.Button('Send File')
-        self.renew.connect('clicked', self.freshUser)
+        self.renew.connect('clicked', self.freUser_thr)
         self.send.connect('clicked', self.fileOpen, self.dest)
 
         self.table = gtk.Table(20, 20, True)
@@ -80,19 +82,26 @@ class GFeige(gtk.Window):
         self.table.attach(self.renew, 7, 12, 16, 19)
         self.table.attach(self.send, 13, 19, 16, 19)
 
-        self.freshUser()
+        #self.freshUser()
+        self.freUser_thr()
         self.show_all()
         
 
     def freshUser(self, widget=None):
-        self.list.clear()
         self.fg.broadcast()
-        time.sleep(0.5)
+        time.sleep(2)
+        self.list.clear()
         for user in range(0, len(self.fg.onlineUser)):
             iter = self.list.append( (user, self.fg.onlineUser[user]) )
             self.list.set(iter)
         self.count.set_text('User num ' + str(len(self.fg.onlineUser)))
         print "self.fg.onlineUser:", self.fg.onlineUser
+
+
+    def freUser_thr(self, widget=None):
+        fre_thr = mythread(self.freshUser)
+        fre_thr.setDaemon(True)
+        fre_thr.start()
 
 
     def listSelected(self, treeview):
@@ -119,7 +128,6 @@ class GFeige(gtk.Window):
             res = dialog.run()
             if res == gtk.RESPONSE_OK:
                 filename = dialog.get_filename()
-                print 'file: %s to %s' % (filename, self.dest)
                 self.fg.send_thr(self.dest, filename)
             dialog.destroy()
 

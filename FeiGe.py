@@ -58,13 +58,16 @@ class FeiGe():
         svrSock.send(fileName)
         reply = svrSock.recv(self.bufferSize)
         if reply == 'True':
-            print 'Preparing to send..'
-
+            
             if os.name == 'nt':
                 fileName = fileName.decode('utf-8').encode('936')
+            print 'Preparing to send..'
+            print 'file name :', fileName
+            print 'file size : %*.*f KBytes' % (10, 2, os.path.getsize(fileName)/1024.0)
             f = open(fileName, 'rb')
         
             while True:
+                tstart = time.time()
                 data = f.read(self.bufferSize)
                 if not data:
                     break
@@ -73,7 +76,9 @@ class FeiGe():
                     data = data[sent:]
 
             svrSock.close()
-            print 'file has sended...'
+            tend = time.time()
+            print 'file has sended..'
+            print 'Total time used: %*.*f s..' % (9, 5, tend - tstart)
 
     def send_thr(self, dest, filename):
         send_thr = mythread(self.fileSend, dest, filename)
@@ -108,9 +113,12 @@ class FeiGe():
 
     def rece(self, cliSock, name):
 
-        os.chdir('/home/administrator/桌面')
+        #os.chdir('/home/administrator/桌面')
+        if os.name == 'nt':
+            name = name.decode('utf-8'.encode('936'))
         f = open(name, 'wb')
         while True:
+            tstart = time.time()
             data = cliSock.recv(self.bufferSize)
             if not data:
                 break
@@ -120,7 +128,9 @@ class FeiGe():
         f.flush()
         f.close()
         cliSock.close()
-        print 'file has downloaded...'
+        tend = time.time()
+        print 'file has downloaded..'
+        print 'Total time used: %*.*f s..' % (9, 5, tend - tstart)
 
 
     def rece_thr(self, cliSock, name):
@@ -160,7 +170,7 @@ class FeiGe():
         #initialize the list
         self.onlineUser = []
         dest = ("<broadcast>", self.uPort)
-        time.sleep(0.5)
+        time.sleep(0.2)
         self.reply_socket.sendto('Hi', dest)
 
         
@@ -196,7 +206,7 @@ if __name__ == '__main__':
 
     while True:
         t = raw_input('>')
-        if t == '1':
+        if t == 'fuck':
             fg.fileSend(fg.local_IP, '/windows/sda7/picture/computer/4.jpg')
 
 
