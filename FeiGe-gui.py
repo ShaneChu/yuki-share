@@ -53,14 +53,27 @@ class GFeige(gtk.Window):
 
         '''the destination where the file would be sended'''
         self.dest = ''
-        self.list = gtk.ListStore(int, str)
+        self.list = gtk.ListStore(str, str)
 
-        self.treeview = gtk.TreeView()
+        self.treeview = gtk.TreeView(self.list)
         model = self.treeview.get_selection()
         model.set_mode(gtk.SELECTION_SINGLE)
-        r = gtk.CellRendererText()
-        self.treeview.insert_column_with_attributes(-1, "onlineUser", r, text=1)
-        #self.treeview.insert_column_with_attributes(-1, "hostname", r, text=1)
+        #r = gtk.CellRendererText()
+        #self.treeview.insert_column_with_attributes(-1, "onlineUser", r, text=1)
+        self.user_column = gtk.TreeViewColumn('onlineUsers')
+        self.host_column = gtk.TreeViewColumn('hostname')
+        self.treeview.append_column(self.user_column)
+        self.treeview.append_column(self.host_column)
+
+        self.user_cell = gtk.CellRendererText()
+        self.host_cell = gtk.CellRendererText()
+        self.user_column.pack_start(self.user_cell, True)
+        self.host_column.pack_start(self.host_cell, True)
+        self.user_column.set_attributes(self.user_cell, text=0)
+        self.host_column.set_attributes(self.host_cell, text=1)
+
+        self.user_column.set_sort_column_id(0)
+        self.treeview.set_reorderable(True)
 
         '''the fifth line below is to use auto scrollbar policy for ScrolledWindow'''
         self.treeview.set_model(self.list)
@@ -82,17 +95,16 @@ class GFeige(gtk.Window):
         self.table.attach(self.renew, 7, 12, 16, 19)
         self.table.attach(self.send, 13, 19, 16, 19)
 
-        #self.freshUser()
-        self.freUser_thr()
         self.show_all()
+        self.freUser_thr()
         
 
     def freshUser(self, widget=None):
         self.fg.broadcast()
-        time.sleep(2)
+        time.sleep(1)
         self.list.clear()
         for user in range(0, len(self.fg.onlineUser)):
-            iter = self.list.append( (user, self.fg.onlineUser[user]) )
+            iter = self.list.append(self.fg.onlineUser[user])
             self.list.set(iter)
         self.count.set_text('User num ' + str(len(self.fg.onlineUser)))
         print "self.fg.onlineUser:", self.fg.onlineUser

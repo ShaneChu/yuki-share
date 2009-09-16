@@ -41,9 +41,11 @@ class FeiGe():
         self.author = 'Shane Chu'
         self.version = 1.0
 
-        s = socket(AF_INET, SOCK_DGRAM)
-        s.connect(('google.com', 0))
-        self.local_IP = s.getsockname()[0]
+        sock = socket(AF_INET, SOCK_DGRAM)
+        sock.connect(('google.com', 0))
+        self.local_IP = sock.getsockname()[0]
+        self.hostname = gethostname()
+
         self.tPort = 7777
         self.uPort = 50000
         self.tcpPort = ('', self.tPort)
@@ -65,9 +67,9 @@ class FeiGe():
             print 'file name :', fileName
             print 'file size : %*.*f KBytes' % (10, 2, os.path.getsize(fileName)/1024.0)
             f = open(fileName, 'rb')
+            tstart = time.time()
         
             while True:
-                tstart = time.time()
                 data = f.read(self.bufferSize)
                 if not data:
                     break
@@ -118,8 +120,8 @@ class FeiGe():
         if os.name == 'nt':
             name = name.decode('utf-8'.encode('936'))
         f = open(name, 'wb')
+        tstart = time.time()
         while True:
-            tstart = time.time()
             data = cliSock.recv(self.bufferSize)
             if not data:
                 break
@@ -131,8 +133,7 @@ class FeiGe():
         cliSock.close()
         tend = time.time()
         print 'file has downloaded..'
-        #print 'Total time used: %*.*f s..' % (9, 5, tend - tstart)
-        print 'receive time ' + str(tend - tstart)
+        print 'Total time used: %*.*f s..' % (9, 5, tend - tstart)
 
 
     def rece_thr(self, cliSock, name):
@@ -150,14 +151,14 @@ class FeiGe():
         
         while True:
             message, address = uSock.recvfrom(8192)
-            uSock.sendto('Hi', address)
+            uSock.sendto(self.hostname, address)
             #if receive a localhost IP, it will not send a reply.
             #if address[0] <> self.local_IP:
             try:
-                if self.onlineUser.index(address[0]) + 1:
+                if self.onlineUser.index([address[0], message]) + 1:
                     pass
             except:
-                self.onlineUser.append(address[0])
+                self.onlineUser.append([address[0], message])
 
         
     def brc_thread(self):
@@ -173,7 +174,7 @@ class FeiGe():
         self.onlineUser = []
         dest = ("<broadcast>", self.uPort)
         time.sleep(0.2)
-        self.reply_socket.sendto('Hi', dest)
+        self.reply_socket.sendto(self.hostname, dest)
 
         
     def replyReceive(self):
@@ -184,13 +185,12 @@ class FeiGe():
 
         while True:
             message, address = self.reply_socket.recvfrom(2048)
-            print 'receive a reply'
             #if address[0] <> self.local_IP:
             try:
-                if self.onlineUser.index(address[0]) + 1:
+                if self.onlineUser.index([address[0], message]) + 1:
                     pass
             except:
-                self.onlineUser.append(address[0])
+                self.onlineUser.append([address[0], message])
 
     
     def reply_thread(self):
