@@ -57,13 +57,15 @@ class FeiGe():
     def fileSend(self, dest, fileName):
         svrSock = socket(AF_INET, SOCK_STREAM)
         svrSock.connect((dest, self.tPort))
-        svrSock.send(fileName)
+
+        print 'Preparing to send..'
+        svrSock.send(fileName.split(os.path.sep)[-1])
         reply = svrSock.recv(self.bufferSize)
         if reply == 'True':
-            
+
+            print 'the other side has confirmed..'
             if os.name == 'nt':
                 fileName = fileName.decode('utf-8').encode('936')
-            print 'Preparing to send..'
             print 'file name :', fileName
             print 'file size : %*.*f KBytes' % (10, 2, os.path.getsize(fileName)/1024.0)
             f = open(fileName, 'rb')
@@ -84,6 +86,7 @@ class FeiGe():
 
     def send_thr(self, dest, filename):
         send_thr = mythread(self.fileSend, dest, filename)
+        send_thr.setName('FileSendThread')
         send_thr.setDaemon(True)
         send_thr.start()
 
@@ -99,7 +102,6 @@ class FeiGe():
             print 'connected from:', addr
 
             name = cliSock.recv(self.bufferSize)
-            name = name.split(os.path.sep)[-1]
             #ron = func("get a file \'%s\', receive or not?"%(name))
             #if ron:
             cliSock.send('True')
@@ -109,6 +111,7 @@ class FeiGe():
 
     def frece_thread(self):
         frece_thr = mythread(self.fileRec)
+        frece_thr.setName('FileListenThread')
         frece_thr.setDaemon(True)
         frece_thr.start()
 
@@ -116,11 +119,11 @@ class FeiGe():
     def rece(self, cliSock, name):
 
         #os.chdir('/home/administrator/桌面')
-        print 'receiving file "%s"' % (name)
         if os.name == 'nt':
             name = name.decode('utf-8'.encode('936'))
-        f = open(name, 'wb')
+        print 'receiving file "%s"' % (name)
         tstart = time.time()
+        f = open(name, 'wb')
         while True:
             data = cliSock.recv(self.bufferSize)
             if not data:
@@ -138,6 +141,7 @@ class FeiGe():
 
     def rece_thr(self, cliSock, name):
         rece_thr = mythread(self.rece, cliSock, name)
+        rece_thr.setName('FileReceiveThread')
         rece_thr.setDaemon(True)
         rece_thr.start()
 
@@ -163,6 +167,7 @@ class FeiGe():
         
     def brc_thread(self):
         brc = mythread(self.BrcaListen)
+        brc.setName('BroadListenThread')
         brc.setDaemon(True)
         brc.start()
 
@@ -195,6 +200,7 @@ class FeiGe():
     
     def reply_thread(self):
         reply = mythread(self.replyReceive)
+        reply.setName('ReplyThread')
         reply.setDaemon(True)
         reply.start()
 
