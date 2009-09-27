@@ -8,6 +8,7 @@ import os
 import sys
 import time
 import thread
+import gobject
 import threading
 import webbrowser
 import SocketServer
@@ -54,7 +55,7 @@ class FeiGe():
         self.onlineUser = []
 
 
-    def fileSend(self, dest, fileName):
+    def fileSend(self, dest, fileName, func=None, *args):
         svrSock = socket(AF_INET, SOCK_STREAM)
         svrSock.connect((dest, self.tPort))
 
@@ -83,30 +84,32 @@ class FeiGe():
             tend = time.time()
             print 'file has sended..'
             print 'Total time used: %*.*f s..' % (9, 5, tend - tstart)
+            if func:
+                func(*args)
 
-    def send_thr(self, dest, filename):
-        send_thr = mythread(self.fileSend, dest, filename)
-        send_thr.setName('FileSendThread')
-        send_thr.setDaemon(True)
-        send_thr.start()
+        elif reply == 'False':
+            print 'refuse to download..'
 
 
-    def fileRec(self):
+    def fileRec(self, func=None, *args):
 
         serSock = socket(AF_INET, SOCK_STREAM)
         serSock.bind(self.tcpPort)
         serSock.listen(15)
+        #tip = func(*args)
 
         while True:
             cliSock, addr = serSock.accept()
             print 'connected from:', addr
 
             name = cliSock.recv(self.bufferSize)
-            #ron = func("get a file \'%s\', receive or not?"%(name))
-            #if ron:
+            #tip = func("receive a file '%s', download or not?" % (name))
+            #tip = func(*args)
+            #if str(tip) == 'True':
             cliSock.send('True')
-            #time.sleep(0.5)
             self.rece_thr(cliSock, name)
+            #else:
+            #    cliSock.send('False')
 
 
     def frece_thread(self):
@@ -118,7 +121,7 @@ class FeiGe():
 
     def rece(self, cliSock, name):
 
-        #os.chdir('/home/administrator/桌面')
+        #os.chdir('/home/administrator/')
         if os.name == 'nt':
             name = name.decode('utf-8'.encode('936'))
         print 'receiving file "%s"' % (name)

@@ -1,5 +1,5 @@
-#! usr/bin/python
-# -*- coding:utf-8 -*-
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 # Filename: FeiGe-gui.py
 
 
@@ -11,6 +11,7 @@ import sys
 import time
 import socket
 import thread
+import gobject
 import threading
 import gtk, pygtk
 pygtk.require('2.0')
@@ -47,9 +48,13 @@ class GFeige(gtk.Window):
 
         '''initialize the basic function'''
         self.fg = FeiGe()
-        self.fg.frece_thread()
-        self.fg.brc_thread()
-        self.fg.reply_thread()
+        #self.fg.frece_thread()
+        #self.fg.brc_thread()
+        #self.fg.reply_thread()
+        gobject.idle_add(self.fg.frece_thread)
+        #gobject.idle_add(self.fg.fileRec, self.confirm, 'receive a file, download or not?')
+        gobject.idle_add(self.fg.brc_thread)
+        gobject.idle_add(self.fg.reply_thread)
 
         '''the destination where the file would be sended'''
         self.dest = ''
@@ -85,7 +90,7 @@ class GFeige(gtk.Window):
         self.count = gtk.Label('User num ' + str(len(self.fg.onlineUser)))
         self.renew = gtk.Button('Renew')
         self.send = gtk.Button('Send File')
-        self.renew.connect('clicked', self.freUser_thr)
+        self.renew.connect('clicked', self.ButtonEvent)
         self.send.connect('clicked', self.fileOpen, self.dest)
 
         self.table = gtk.Table(20, 20, True)
@@ -96,7 +101,8 @@ class GFeige(gtk.Window):
         self.table.attach(self.send, 13, 19, 16, 19)
 
         self.show_all()
-        self.freUser_thr()
+        #self.freUser_thr()
+        gobject.idle_add(self.freUser_thr)
         
 
     def freshUser(self, widget=None):
@@ -110,10 +116,14 @@ class GFeige(gtk.Window):
         print "self.fg.onlineUser:", self.fg.onlineUser
 
 
-    def freUser_thr(self, widget=None):
+    def freUser_thr(self):
         fre_thr = mythread(self.freshUser)
         fre_thr.setDaemon(True)
         fre_thr.start()
+
+
+    def ButtonEvent(self, widget=None):
+        gobject.idle_add(self.freUser_thr)
 
 
     def listSelected(self, treeview):
@@ -122,7 +132,7 @@ class GFeige(gtk.Window):
             if iter is None:
                     print "nothing selected"
             else:
-                    data = ls.get_value(iter, 1)
+                    data = ls.get_value(iter, 0)
                     self.dest = data
 
 
@@ -140,12 +150,13 @@ class GFeige(gtk.Window):
             res = dialog.run()
             if res == gtk.RESPONSE_OK:
                 filename = dialog.get_filename()
-                self.fg.send_thr(self.dest, filename)
+                gobject.idle_add(self.fg.fileSend, self.dest, filename, self.infoDia, 'File has been sended.')
             dialog.destroy()
 
 
     def confirm(self, message):
         mydialog = gtk.MessageDialog(None, 0, gtk.MESSAGE_WARNING, gtk.BUTTONS_YES_NO, message)
+        mydialog.set_title('Choose Dialog')
         t = mydialog.run()
         mydialog.destroy()
         if t == -8:
@@ -163,11 +174,22 @@ class GFeige(gtk.Window):
         md.destroy()
 
 
+    def infoDia(self, str):
+        md = gtk.MessageDialog(self, 
+            gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_INFO, 
+            gtk.BUTTONS_OK, str)
+        md.set_position(gtk.WIN_POS_CENTER)
+        md.set_title('Information')
+        md.run()
+        md.destroy()
+
+
 if __name__ == '__main__':
 
-    gtk.gdk.threads_init()
+    #gtk.gdk.threads_init()
+    gobject.threads_init()
     gFeige = GFeige()
-    gtk.gdk.threads_enter()
+    #gtk.gdk.threads_enter()
     gtk.main()
-    gtk.gdk.threads_leave()
+    #gtk.gdk.threads_leave()
 
