@@ -48,9 +48,6 @@ class GFeige(gtk.Window):
 
         '''initialize the basic function'''
         self.fg = FeiGe()
-        #self.fg.frece_thread()
-        #self.fg.brc_thread()
-        #self.fg.reply_thread()
         gobject.idle_add(self.fg.frece_thread)
         #gobject.idle_add(self.fg.fileRec, self.confirm, 'receive a file, download or not?')
         gobject.idle_add(self.fg.brc_thread)
@@ -63,10 +60,8 @@ class GFeige(gtk.Window):
         self.treeview = gtk.TreeView(self.list)
         model = self.treeview.get_selection()
         model.set_mode(gtk.SELECTION_SINGLE)
-        #r = gtk.CellRendererText()
-        #self.treeview.insert_column_with_attributes(-1, "onlineUser", r, text=1)
-        self.user_column = gtk.TreeViewColumn('onlineUsers')
-        self.host_column = gtk.TreeViewColumn('hostname')
+        self.user_column = gtk.TreeViewColumn('在线用户')
+        self.host_column = gtk.TreeViewColumn('主机名')
         self.treeview.append_column(self.user_column)
         self.treeview.append_column(self.host_column)
 
@@ -87,21 +82,26 @@ class GFeige(gtk.Window):
         self.swindow.add(self.treeview)
         self.swindow.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
 
-        self.count = gtk.Label('User num ' + str(len(self.fg.onlineUser)))
-        self.renew = gtk.Button('Renew')
-        self.send = gtk.Button('Send File')
+        self.count = gtk.Label('用户数 \n    ' + str(len(self.fg.onlineUser)))
+        self.renew = gtk.Button('刷新')
+        self.about = gtk.Button('关于')
+        self.send = gtk.Button('发送文件')
+        self.sendDir = gtk.Button('发送文件夹')
         self.renew.connect('clicked', self.ButtonEvent)
+        self.about.connect('clicked', self.on_about)
         self.send.connect('clicked', self.fileOpen, self.dest)
+        self.sendDir.connect('clicked', self.folderOpen, self.dest)
 
         self.table = gtk.Table(20, 20, True)
         self.add(self.table)
-        self.table.attach(self.swindow, 0, 20, 0, 15)
-        self.table.attach(self.count, 0, 6, 16, 19)
-        self.table.attach(self.renew, 7, 12, 16, 19)
+        self.table.attach(self.swindow, 0, 14, 0, 14)
+        self.table.attach(self.count, 14, 20, 2, 5)
+        self.table.attach(self.renew, 15, 19, 6, 9)
+        self.table.attach(self.about, 15, 19, 9, 12)
         self.table.attach(self.send, 13, 19, 16, 19)
+        self.table.attach(self.sendDir, 6, 12, 16, 19)
 
         self.show_all()
-        #self.freUser_thr()
         gobject.idle_add(self.freUser_thr)
         
 
@@ -112,7 +112,7 @@ class GFeige(gtk.Window):
         for user in range(0, len(self.fg.onlineUser)):
             iter = self.list.append(self.fg.onlineUser[user])
             self.list.set(iter)
-        self.count.set_text('User num ' + str(len(self.fg.onlineUser)))
+        self.count.set_text('用户数 \n    ' + str(len(self.fg.onlineUser)))
         print "self.fg.onlineUser:", self.fg.onlineUser
 
 
@@ -143,16 +143,38 @@ class GFeige(gtk.Window):
                                gtk.RESPONSE_CANCEL,
                                     gtk.STOCK_OPEN,
                                   gtk.RESPONSE_OK))
-        #dialog.set_action(gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER)
+        dialog.set_select_multiple(True)
         if self.dest == '':
             self.warnDia('Please select a user.')
         else:
             res = dialog.run()
             if res == gtk.RESPONSE_OK:
-                filename = dialog.get_filename()
-                gobject.idle_add(self.fg.fileSend, self.dest, filename, self.infoDia, 'File has been sended.')
+                filenames = dialog.get_filenames()
+                for file in filenames[0:-1]:
+                    gobject.idle_add(self.fg.fileTransfer, self.dest, file)
+                gobject.idle_add(self.fg.fileTransfer, self.dest, filenames[-1], self.infoDia, 'Files has been sended.')
             dialog.destroy()
 
+
+    def folderOpen(self, widget, dest=None):
+        dialog = gtk.FileChooserDialog('Open',None,
+             gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER,
+                                 (gtk.STOCK_CANCEL,
+                               gtk.RESPONSE_CANCEL,
+                                      gtk.STOCK_OK,
+                                  gtk.RESPONSE_OK))
+        if self.dest == '':
+            self.warnDia('Please select a user.')
+        else:
+            res = dialog.run()
+            if res == gtk.RESPONSE_OK:
+                folderName = dialog.get_current_folder()
+                if os.name == 'nt':
+                    folderName = folderName.decode('utf-8').encode('936')
+                print folderName
+                #gobject.idle_add(self.fg.fileTransfer, self.dest, filename, self.infoDia, 'File has been sended.')
+            dialog.destroy()
+            
 
     def confirm(self, message):
         mydialog = gtk.MessageDialog(None, 0, gtk.MESSAGE_WARNING, gtk.BUTTONS_YES_NO, message)
@@ -184,12 +206,35 @@ class GFeige(gtk.Window):
         md.destroy()
 
 
+    def on_about(self, data=None):
+
+        about = gtk.AboutDialog()
+        about.set_name('Yuki-Feige')
+        about.set_version('1.0')
+        about.set_website('https://code.google.com/p/shuge/issues')
+        about.set_website_label('Shuge Group')
+        about.set_comments('Yuki-Feige is a GUI interface of File Transfer')
+        about.set_authors(['Shane Chu, Shane_Chu@qq.com'])
+        about.set_copyright('Copyright © 2009 Shane Chu')
+        about.set_position(gtk.WIN_POS_CENTER)
+
+        about.set_wrap_license(True)
+        about.set_license('Yuki-Feige is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\n\
+Yuki-Feige is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\n\
+You should have received a copy of the GNU General Public License along with Yuki-Feige; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA')
+        about.set_translator_credits('translator-credits')
+        about.set_artists(['Shane Chu, Shane_Chu@qq.com'])
+
+        about.run()
+        about.destroy()        
+
+
 if __name__ == '__main__':
 
-    #gtk.gdk.threads_init()
     gobject.threads_init()
     gFeige = GFeige()
-    #gtk.gdk.threads_enter()
     gtk.main()
-    #gtk.gdk.threads_leave()
+
+
+
 

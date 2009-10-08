@@ -34,7 +34,7 @@ class mythread(threading.Thread):
         return self.res
 
 
-class FeiGe():
+class FeiGe:
 
     def __init__(self):
 
@@ -55,7 +55,7 @@ class FeiGe():
         self.onlineUser = []
 
 
-    def fileSend(self, dest, fileName, func=None, *args):
+    def fileTransfer(self, dest, fileName, func=None, *args):
         svrSock = socket(AF_INET, SOCK_STREAM)
         svrSock.connect((dest, self.tPort))
 
@@ -121,7 +121,6 @@ class FeiGe():
 
     def rece(self, cliSock, name):
 
-        #os.chdir('/home/administrator/')
         if os.name == 'nt':
             name = name.decode('utf-8'.encode('936'))
         print 'receiving file "%s"' % (name)
@@ -159,8 +158,6 @@ class FeiGe():
         while True:
             message, address = uSock.recvfrom(8192)
             uSock.sendto(self.hostname, address)
-            #if receive a localhost IP, it will not send a reply.
-            #if address[0] <> self.local_IP:
             try:
                 if self.onlineUser.index([address[0], message]) + 1:
                     pass
@@ -193,7 +190,6 @@ class FeiGe():
 
         while True:
             message, address = self.reply_socket.recvfrom(2048)
-            #if address[0] <> self.local_IP:
             try:
                 if self.onlineUser.index([address[0], message]) + 1:
                     pass
@@ -219,7 +215,7 @@ if __name__ == '__main__':
     while True:
         t = raw_input('>')
         if t == 'fuck':
-            fg.fileSend(fg.local_IP, '/windows/sda7/picture/computer/4.jpg')
+            fg.fileTransfer(fg.local_IP, '/windows/sda7/picture/computer/4.jpg')
 
 
 
